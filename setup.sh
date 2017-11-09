@@ -120,8 +120,8 @@ description TEXT, \
 mobile TEXT, \
   phone TEXT);" | sqlite3 ${DATABASE}
 
-USERDB=/etc/privacyidea/users.${GROUP}.install
-cat <<END > $DATABASE
+USERDB=/etc/privacyidea/users.global.install
+cat <<END > $USERDB
 {'Server': '/',
 'Driver': 'sqlite',
 'Database': '${DATABASE}',
