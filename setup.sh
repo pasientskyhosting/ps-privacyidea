@@ -120,6 +120,7 @@ description TEXT, \
 mobile TEXT, \
   phone TEXT);" | sqlite3 ${DATABASE}
 
+USERDB=/etc/privacyidea/users.${GROUP}.install
 cat <<END > $DATABASE
 {'Server': '/',
 'Driver': 'sqlite',
@@ -130,7 +131,7 @@ cat <<END > $DATABASE
 'Map': '{"userid": "id", "username": "username", "email":"email", "password": "password", "phone":"phone", "mobile":"mobile", "surname":"name", "givenname":"givenname", "description": "description"}'
 }
 END
-pi-manage resolver create GLOBAL sqlresolver ${DATABASE}
+pi-manage resolver create GLOBAL sqlresolver ${USERDB}
 chown $USERNAME $DATABASE
 
 for GROUP in hosting network vpn; do
@@ -145,7 +146,8 @@ for GROUP in hosting network vpn; do
 	mobile TEXT, \
     phone TEXT);" | sqlite3 ${DATABASE}
 
-  cat <<END > ${DATABASE}
+  USERDB=/etc/privacyidea/users.${GROUP}.install
+  cat <<END > ${USERDB}
 {'Server': '/',
  'Driver': 'sqlite',
  'Database': '${DATABASE}',
@@ -156,7 +158,7 @@ for GROUP in hosting network vpn; do
 }
 END
   chown $USERNAME ${DATABASE}
-  pi-manage resolver create ${GROUP} sqlresolver ${DATABASE}
+  pi-manage resolver create ${GROUP} sqlresolver ${USERDB}
 
   pi-manage realm create $GROUP ${GROUP}
 done
