@@ -89,14 +89,74 @@ enable_nginx_uwsgi() {
 update_db() {
   # Set the version to the first PI 2.0 version
   pi-manage db stamp 4f32a4e1bf33 -d /usr/lib/privacyidea/migrations
+
   # Upgrade the database
-  pi-manage db upgrade -d /usr/lib/privacyidea/migrations
+  #pi-manage db upgrade -d /usr/lib/privacyidea/migrations
 }
 
 create_user
 adapt_pi_cfg
-#create_database
+create_database
 enable_nginx_uwsgi
 create_files
 create_certificate
-#update_db
+update_db
+
+PRIVACYIDEA_ADMIN_USER=${PRIVACYIDEA_ADMIN_USER:-}
+PRIVACYIDEA_ADMIN_PASS=${PRIVACYIDEA_ADMIN_PASS:-}
+
+if [ -n "${PRIVACYIDEA_ADMIN_USER}" -o -n "${PRIVACYIDEA_ADMIN_PASS}" ]; then
+  pi-manage admin add ${PRIVACYIDEA_ADMIN_USER} -p ${PRIVACYIDEA_ADMIN_PASS}
+fi
+
+DATABASE=/etc/privacyidea/users.global.sqlite
+echo "create table users (id INTEGER PRIMARY KEY ,\
+username TEXT UNIQUE,\
+surname TEXT, \
+givenname TEXT, \
+email TEXT, \
+password TEXT, \
+description TEXT, \
+mobile TEXT, \
+  phone TEXT);" | sqlite3 ${DATABASE}
+
+cat <<END > $DATABASE
+{'Server': '/',
+'Driver': 'sqlite',
+'Database': '${DATABASE}',
+'Table': 'users',
+'Limit': '500',
+'Editable': '1',
+'Map': '{"userid": "id", "username": "username", "email":"email", "password": "password", "phone":"phone", "mobile":"mobile", "surname":"name", "givenname":"givenname", "description": "description"}'
+}
+END
+pi-manage resolver create GLOBAL sqlresolver ${DATABASE}
+chown $USERNAME $DATABASE
+
+for GROUP in hosting network vpn; do
+  DATABASE=/etc/privacyidea/users.${GROUP}.sqlite
+  echo "create table users (id INTEGER PRIMARY KEY ,\
+	username TEXT UNIQUE,\
+	surname TEXT, \
+	givenname TEXT, \
+	email TEXT, \
+	password TEXT, \
+	description TEXT, \
+	mobile TEXT, \
+    phone TEXT);" | sqlite3 ${DATABASE}
+
+  cat <<END > ${DATABASE}
+{'Server': '/',
+ 'Driver': 'sqlite',
+ 'Database': '${DATABASE}',
+ 'Table': 'users',
+ 'Limit': '500',
+ 'Editable': '1',
+ 'Map': '{"userid": "id", "username": "username", "email":"email", "password": "password", "phone":"phone", "mobile":"mobile", "surname":"name", "givenname":"givenname", "description": "description"}'
+}
+END
+  chown $USERNAME ${DATABASE}
+  pi-manage resolver create ${GROUP} sqlresolver ${DATABASE}
+
+  pi-manage realm create $GROUP ${GROUP}
+done

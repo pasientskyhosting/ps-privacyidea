@@ -5,15 +5,23 @@ This is just a docker image for privacyIDEA. When started, you should be able to
 
 Default user: admin, pass: test
 
+Create data containers:
+-----------------------
+```
+docker volume create --name privacyidea_config
+docker volume create --name privacyidea_log
+docker volume create --name privacyidea_data
+docker volume create --name mysql_data
+```
 
 Run with http:
 --------------
 ```
-docker run -p 5000:80 pasientskyhosting/ps-privacyidea
+docker run -p 5000:80 --name privacyidea --restart=always -d -v privacyidea_config:/etc/privacyidea -v privacyidea_log:/var/log/privacyidea -v privacyidea_data:/var/lib/privacyidea -v mysql_data:/var/lib/mysql -e PRIVACYIDEA_ADMIN_USER=admin -e PRIVACYIDEA_ADMIN_PASS=test pasientskyhosting/ps-privacyidea
 ```
 
 Run with https:
 ---------------
 ```
-docker run -p 5000:443 pasientskyhosting/ps-privacyidea
+docker run -p 5000:443 --name privacyidea --restart=always -d -v privacyidea_config:/etc/privacyidea -v privacyidea_log:/var/log/privacyidea -v privacyidea_data:/var/lib/privacyidea -v mysql_data:/var/lib/mysql -e PRIVACYIDEA_ADMIN_USER=admin -e PRIVACYIDEA_ADMIN_PASS=test pasientskyhosting/ps-privacyidea
 ```

@@ -1,4 +1,4 @@
-FROM ubuntu:trusty
+FROM sameersbn/mysql:latest
 
 RUN echo "deb http://nginx.org/packages/mainline/ubuntu/ trusty nginx" > /etc/apt/sources.list.d/nginx.list && \
     echo "deb-src http://nginx.org/packages/mainline/ubuntu/ trusty nginx" >> /etc/apt/sources.list.d/nginx.list && \
@@ -18,6 +18,8 @@ RUN apt-get update \
         uwsgi \
         uwsgi-plugin-python \
         python-privacyidea \
+        python-mysqldb \
+        sqlite3 \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
@@ -29,14 +31,15 @@ COPY conf/nginx-site.conf /etc/nginx/sites-available/privacyidea
 COPY privacyideaapp.py /etc/privacyidea/privacyideaapp.py
 COPY privacyidea.xml /etc/uwsgi/apps-available/privacyidea.xml
 
-COPY setup.sh /setup.sh
-RUN /bin/sh /setup.sh
-
-RUN pi-manage admin add admin -e admin@localhost -p test
+COPY setup.sh /sbin/setup.sh
+COPY entrypoint.sh /sbin/entrypoint.sh
 
 EXPOSE 5000
+
 VOLUME /etc/privacyidea
 VOLUME /var/log/privacyidea
 VOLUME /var/lib/privacyidea
+VOLUME /var/lib/mysql
 
+ENTRYPOINT ["/sbin/entrypoint.sh"]
 CMD ["/usr/bin/supervisord","-n","-c", "/etc/supervisord.conf"]
